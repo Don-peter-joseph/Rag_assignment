@@ -1,0 +1,15 @@
+langchain
+langchain-core
+langchain-community
+langgraph
+ipykernel
+streamlit
+python-dotenv
+pymupdf
+rank_bm25
+langchain-huggingface
+langchain-groq
+pyowm
+langchain-qdrant
+transformers
+torch
