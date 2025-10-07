@@ -32,7 +32,7 @@ def retriever_init(pdf_bytes):
         loader = PyPDFLoader(temp_pdf.name)
         pages = loader.load()
 
-    embeddings=HuggingFaceEmbeddings(model='sentence-transformers/all-MiniLM-L6-v2')
+    embeddings=HuggingFaceEmbeddings(model="./local_models/all-MiniLM-L6-v2")
     chunker=SemanticChunker(embeddings=embeddings)
     chunks=chunker.split_documents(
         documents=pages
