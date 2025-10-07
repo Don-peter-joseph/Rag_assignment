@@ -1,6 +1,7 @@
 langchain
 langchain-core
 langchain-community
+langchain-experimental
 langgraph
 ipykernel
 streamlit
@@ -15,3 +16,5 @@ torch
 pytest
 fpdf
 reportlab
+sentence-transformers
+pypdf
