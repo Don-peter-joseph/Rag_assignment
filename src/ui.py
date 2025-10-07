@@ -1,10 +1,5 @@
 import streamlit as st
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.chains import ConversationalRetrievalChain
-from langchain.llms import HuggingFaceHub  # or use OpenAI, Ollama, etc.
-from backend import invoke_agent
+from agent import invoke_graph
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="PDF Chatbot", page_icon="📄", layout="wide")
 
@@ -87,7 +82,8 @@ if uploaded_file:
                 st.markdown("---")
                 st.session_state.count+=1
         with st.spinner("Thinking..."):
-            result = invoke_agent(uploaded_file,user_query)
+            file_bytes=uploaded_file.read()
+            result = invoke_graph(file_bytes,user_query)
 
 
         st.session_state.chat_history.append({"role": "bot", "content": result})

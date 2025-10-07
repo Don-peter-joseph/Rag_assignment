@@ -7,9 +7,11 @@ streamlit
 python-dotenv
 pymupdf
 rank_bm25
-langchain-huggingface
 langchain-groq
 pyowm
 langchain-qdrant
 transformers
 torch
+pytest
+fpdf
+reportlab
