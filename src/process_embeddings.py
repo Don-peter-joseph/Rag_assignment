@@ -1,25 +1,10 @@
-
-from transformers import CLIPProcessor,CLIPModel
 from PIL import Image
-import base64
-import torch
-import fitz #pymupdf
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_core.messages import HumanMessage
-from langchain_core.documents import Document
-import io
 from langchain_community.retrievers import BM25Retriever
-from qdrant_client import QdrantClient
 from langchain_community.vectorstores import Qdrant
-from qdrant_client.http.models import VectorParams, Distance, PointStruct
-from langchain_qdrant import QdrantVectorStore
-from langchain_core.embeddings import Embeddings
-import uuid
-import numpy as np
 from langchain.retrievers import EnsembleRetriever
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 import io,tempfile
 from dotenv import load_dotenv
 load_dotenv()
@@ -61,7 +46,7 @@ def retriever_init(pdf_bytes):
         collection_name="report"
     )
     
-    dense_retriever=vectorstore.as_retriever(search_kwargs={'k':5})
+    dense_retriever=vectorstore.as_retriever(search_kwargs={'k':3})
     sparse_retriever=BM25Retriever.from_documents(chunks)
     sparse_retriever.k=3
     

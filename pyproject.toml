@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "coverage>=7.10.7",
     "fpdf>=1.7.2",
     "ipykernel>=6.30.1",
     "langchain>=0.3.27",
@@ -19,6 +20,7 @@ dependencies = [
     "pyowm>=3.5.0",
     "pypdf>=6.1.1",
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
     "python-dotenv>=1.1.1",
     "rank-bm25>=0.2.2",
     "reportlab>=4.4.4",

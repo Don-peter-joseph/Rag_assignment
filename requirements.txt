@@ -18,3 +18,5 @@ fpdf
 reportlab
 sentence-transformers
 pypdf
+coverage
+pytest-cov

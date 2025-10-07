@@ -1,66 +1,75 @@
-import io
-import numpy as np
 import pytest
+import sys
+sys.path.append("/Volumes/Mac_SSD1/GEN AI/assignment/src")
 from unittest.mock import patch, MagicMock
-from PIL import Image
-from src.agent import invoke_graph
-from src.process_embeddings import embed_image, embed_text
-
-
-# ---------- TEST EMBEDDINGS ----------
-
-def test_embed_image_returns_normalized_vector():
-    # Create dummy image
-    img = Image.new("RGB", (32, 32), color="white")
-    vec = embed_image(img)
-    assert isinstance(vec, np.ndarray)
-    assert np.isclose(np.linalg.norm(vec), 1.0, atol=1e-5)
-
-def test_embed_text_returns_normalized_vector():
-    text = "Test text for embeddings"
-    vec = embed_text(text)
-    assert isinstance(vec, np.ndarray)
-    assert np.isclose(np.linalg.norm(vec), 1.0, atol=1e-5)
-
-
-# ---------- TEST INVOKE_AGENT BASIC FLOW ----------
+from reportlab.pdfgen import canvas
+import io
+from langchain_core.messages import AIMessage
 
 @pytest.fixture
-def mock_pdf_file(tmp_path):
-    """Create a small fake PDF for testing."""
-    from reportlab.pdfgen import canvas
-    pdf_path = tmp_path / "test.pdf"
-    c = canvas.Canvas(str(pdf_path))
-    c.drawString(100, 750, "This is a test page.")
+def sample_pdf_bytes():
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer)
+    c.drawString(100, 750, "Test PDF")
     c.showPage()
     c.save()
+    buffer.seek(0)
+    return buffer.read()
 
-    with open(pdf_path, "rb") as f:
-        file_bytes = f.read()
+@pytest.fixture
+def sample_query():
+    return [{"type": "human", "content": "Hello"}]
 
-    return file_bytes
+@pytest.fixture
+def mock_llm_response():
+    return AIMessage(content="Mocked response")
+
+@pytest.fixture
+def mock_tool_response():
+    return AIMessage(content="Mocked weather response")
+
+@pytest.fixture
+def mock_rag_response():
+    return {"messages":[AIMessage(content="Mocked RAG answer")]}
+
+# Patch the full rag function in nodes.py
+@patch("src.agent.rag")
+@patch("src.nodes.llm_with_tools")
+def test_invoke_rag_graph(mock_llm_with_tools, mock_rag, sample_pdf_bytes, sample_query, mock_rag_response, mock_llm_response):
+    from src.agent import invoke_graph
+
+    # Make llm_with_tools.invoke return a mocked response
+    mock_llm_with_tools.invoke.return_value = mock_llm_response
+
+    # Make rag return mocked RAG response
+    mock_rag.return_value = mock_rag_response
+
+    # Run the graph
+    output = invoke_graph(sample_pdf_bytes, sample_query)
+    print("OUTPUT:", output)
+
+    # Assertions
+    assert output in ["Mocked response", "Mocked RAG answer"]
+    mock_rag.assert_called_once()
 
 
+def mock_weather_tool(*args, **kwargs):
+    """Mock weather tool for testing"""
+    return AIMessage(content="Mocked weather response")
 
-# ---------- TEST ERROR HANDLING ----------
+@patch("src.agent.chatbot")
+@patch("src.agent.tools_condition", lambda state: "tools")  # return valid branch key
+def test_invoke_tools_branch(mock_chatbot, sample_pdf_bytes, sample_query):
+    import src.agent as agent
 
-def test_embed_image_invalid_input_raises():
-    with pytest.raises(Exception):
-        embed_image(12345)  # invalid type
+    mock_chatbot.return_value = {"messages":[AIMessage(content="Mocked weather response")]}
 
+    def mock_weather_tool(*args, **kwargs):
+        """Mock weather tool for testing"""
+        from langchain_core.messages import AIMessage
+        return AIMessage(content="Mocked weather response")
 
-# ---------- TEST GRAPH BEHAVIOR ----------
-@patch("src.nodes.ChatGroq")
-@patch("src.nodes.RetrievalQA")
-def test_invoke_agent_invokes_llm(mock_retrievalqa, mock_llm, mock_pdf_file):
-    mock_llm_instance = MagicMock()
-    mock_llm_instance.invoke.return_value = MagicMock(content="Test reply")
-    mock_llm.return_value = mock_llm_instance
+    agent.weather = mock_weather_tool
 
-    mock_retrieval_instance = MagicMock()
-    mock_retrieval_instance.invoke.return_value = {"result": "Answer"}
-    mock_retrievalqa.from_chain_type.return_value = mock_retrieval_instance
-
-    out = invoke_graph(mock_pdf_file, query="Summarize the document.")
-    assert isinstance(out, str)
-    assert "Answer" in out
+    output = agent.invoke_graph(sample_pdf_bytes, sample_query)
+    assert output == "Mocked weather response"
